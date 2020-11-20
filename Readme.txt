@@ -84,7 +84,10 @@ If you are aware of the Autohotkey language and notice the inconsistencies for s
 -Special keys CANNOT be binded as modifier keys, such as Shift, because they are incapable of being "down".
 
 7.---------Changelog-----------
-
+v1.1
+-FINALLY corrected the broken icon for the popups. God, I'm lazy.
+-Fixed a bug where if one key sent an 'unfinished' modifier (ie, "{Shift Down}"), other keys will still work while Shift is still virtually down. Thanks, Ken!
+-Fixed a bug where Skeys turned off NumLock and ScrollLock when it was turned on. Thanks, Dave!
 v1.0
 -Stable!
 pre1.0

@@ -22,12 +22,10 @@ sc18=SC165
 
   setkeydelay,50          ;10 - default, 50 - slow, 100 - really slow, 0 - freakin fast
   Setstorecapslockmode, off
-  SetScrollLockState, off
-  SetNumLockState, off
 
   ;Tray menu
 Menu, tray, nostandard
-Menu, tray, tip, Skeys v1.0
+Menu, tray, tip, Skeys v1.1
 Menu, tray, add, Enabled, enablehotkeys
 Menu, tray, check, Enabled
 Menu, tray, default, Enabled
@@ -226,11 +224,12 @@ Gui 7: font, w700
 Gui 7: Add, button, xp+110 yp-3 h20 w60 default vdone disabled,Done
 
     ;Universal GUI. For paths/keystrokes/etc
-gui 8: +toolwindow +syswindow +owner1
+gui 8: +toolwindow +sysmenu +owner1
 gui 8: margin, 3, 3
 gui 8: add, edit,vminput w150
 Gui 8: add, button, +hidden xp+135 yp w15 hp vbrowseb gbrowseb,…
 gui 8: add, button, x0 y0 w0 h0 gmbutton default
+
 
 gosub, activatehotkeys
 if(startdisabled=1)
@@ -391,7 +390,7 @@ setupkeycapture:
 loop,18
 {   tempy:=SC%A_Index%
     Hotkey, IfWinActive, ahk_id %setup_id%
-    Hotkey, %tempy%,SC,on
+    Hotkey, *%tempy%,SC,on
     %tempy%_yesorno:="yes"
     iniread, %Tempy%_nick,skeys.ini,% sc%A_Index%, name, Use this key
 }
@@ -406,7 +405,7 @@ gui, +owner1 +toolwindow
 gui, margin, 3,3
 gui,add, picture, icon1 x5 y5 h32 w32, %A_Scriptname%
 Gui, font, w700 underline
-Gui, add, text, xp+36 yp+3,Skeys v1.0
+Gui, add, text, xp+36 yp+3,Skeys v1.1
 Gui, font
 Gui, add, text, xp yp+17 w145 r1,Skeys is made specifically
 gui, add, text, xp-33 yp+15 w180 h60,for "Special keys" (where Skeys`ngets its name)`, and the ability to`ncustomize them to your liking.`nFeedback is encouraged.
@@ -825,8 +824,9 @@ if(engable=1) {
   en%listy%=1
   ;index:=GetIt()
   iniwrite, 1, skeys.ini,% activate%listy%,enabled
+  Tempy:=activate%listy%                                                           ;HAR
   hotkey, ifwinactive
-  Hotkey,% activate%listy%, Scforizzle, on
+  Hotkey,% "*" . tempy, Scforizzle, on
   guicontrol 1: enable, add 
   guicontrol 1: enable, edit
   guicontrol 1: enable, del
@@ -839,7 +839,7 @@ if(engable=1) {
   iniwrite, 0, skeys.ini,% activate%listy%,enabled
 ;~   Used to be SC%Listy%
   Hotkey, ifwinactive
-  Hotkey,% activate%listy%, Scforizzle, off
+  Hotkey,% "*" . activate%listy%, Scforizzle, off
   guicontrol 1: disable, add 
   guicontrol 1: disable, edit
   guicontrol 1: disable, del
@@ -855,18 +855,18 @@ loop,18
     if(yesorno=1) {
       tempy:=SC%A_Index%
       hotkey, ifwinactive
-      Hotkey, %tempy%,SCforizzle, on
+      Hotkey, *%tempy%,SCforizzle, on
     }
     else {
       tempy:=SC%A_Index%
-      Hotkey, %tempy%,SCforizzle, off
+      Hotkey, *%tempy%,SCforizzle, off
     }
 }
 return
 disablehotkeys:
 loop, 18
 {   tempy:=SC%A_Index%
-    hotkey, %tempy%, off
+    hotkey, *%tempy%, off
 }
 return
 
@@ -896,15 +896,16 @@ nowait=0
 return
 
 SCFoRizzle:
+ThisHotkey:=RemoveAsterisk(A_ThisHotkey)
 Loop, 
-{   iniread, action, skeys.ini, %A_thishotkey%,entry%A_Index%
+{   iniread, action, skeys.ini, %thishotkey%,entry%A_Index%
     if(action="" or action="ERROR")
       Break
     if(action="Exit Skeys")
       ExitApp
     ifinstring, action, Popup
     {   wingetpos,,,tskbrw, tskbrh, ahk_class Shell_TrayWnd
-        iniread, popuptext,skeys.ini,%A_Thishotkey%,name,Skeys v1.0
+        iniread, popuptext,skeys.ini,%Thishotkey%,name,Skeys v1.1
         ifnotinstring, action, C
         {   ifinstring, action,B
             { sunrise=0x60008
@@ -941,7 +942,7 @@ Loop,
     }
     else {
     if(action="Wait" or action="Open" or action="Send" or action="Paste")
-    {   iniread, option, skeys.ini, %A_Thishotkey%,option%A_index%
+    {   iniread, option, skeys.ini, %Thishotkey%,option%A_index%
         if(action="Wait")
           sleep, % round(option*1000)
         else  if(action="Open")
@@ -1011,7 +1012,7 @@ Loop,
                                                 else if(action="Disable Skeys")
                                                        Suspend, On
                                                       else if(action="Disable this hotkey")
-                                                              hotkey, %A_Thishotkey%, off
+                                                              hotkey, %Thishotkey%, off
                                       
     } }
     }
@@ -1021,23 +1022,32 @@ Loop,
 return
 SC:
 Suspend, permit
-tempy:=%A_thishotkey%_yesorno
+thishotkey:=RemoveAsterisk(A_ThisHotkey)
+;tempy:=%A_thishotkey%_yesorno
+tempy:=%thishotkey%_yesorno
 if(tempy="yes")
-{   tempy:=%A_Thishotkey%_nick
-    guicontrol 7:,%A_Thishotkey%,!!!%tempy%!!!
-    %A_thishotkey%_yesorno:="no"
+{   tempy:=%Thishotkey%_nick
+    guicontrol 7:,%Thishotkey%,!!!%tempy%!!!
+    %thishotkey%_yesorno:="no"
 } else {
-  tempy:=%A_Thishotkey%_nick
-  guicontrol 7: ,%A_Thishotkey%,%tempy%
-  %A_thishotkey%_yesorno:="yes"
+  tempy:=%Thishotkey%_nick
+  guicontrol 7: ,%Thishotkey%,%tempy%
+  %thishotkey%_yesorno:="yes"
 }
 if(autoit=1)
-{  guicontrol 7:,%A_Thishotkey%,1
+{  guicontrol 7:,%Thishotkey%,1
    gosub mustselectone
 }
 
 return
 
+
+RemoveAsterisk(inputstring)
+{
+  StringReplace, outputstring, inputstring,*
+  return outputstring
+  
+}
 
 
 7ButtonDone:
